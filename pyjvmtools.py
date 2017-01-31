@@ -76,14 +76,8 @@ def plockInfo(pid,lockid):
                     runCount += 1
                     lockHolderMap[searchObj.group(1)] = runCount
 
-
-
-
     print "total log line count = %d" % len(lines) ,", total lockCount = " , len(lockMap)
 
-    # print "\t", "[%5s] %18s %7s %18s %6s %18s %s" % (
-    # "index", "", "daemon", "Tid", "Nid", "Condtion", "ThreadName")
-    # print "\t--------------------------------------------------------------------------------------------------------- "
     if lockid in lockMap:
         plockinfobyid(lockid, 0, lockHolderMap, lockMap[lockid])
     else:
@@ -101,20 +95,20 @@ def plockinfobyid(k, lockCount, lockHolderMap, v):
         runNum = lockHolderMap[k]
     if runNum == 0:
         msg = "There had unlocked lock and make deadlock."
-    print "\t", "<%-5d> %18s waited num %5d , run num %5d. %s" % (
+    print  "<%-5d> %18s waited num %5d , run num %5d. %s" % (
         lockCount, k, len(v.waiterTheadList), runNum, msg)
     if verbose:
         plockedtheadinfo(v)
 
-
 def plockedtheadinfo(v):
-    print "\t", "%7s %18s %7s %18s %6s %18s %s" % (
-        "index", "", "daemon", "Tid", "Nid", "Condtion", "ThreadName")
-    print "\t--------------------------------------------------------------------------------------------------------- "
+    print "\t--------------------------------------------------------------------------------------------- "
+    print  "\t%-7s  %7s %18s %6s %18s %s" % (
+        "| index", "daemon", "Tid", "Nid", "Condtion", "ThreadName")
+    print "\t--------------------------------------------------------------------------------------------- "
     for index in range(len(v.waiterTheadList)):
         curWT = v.waiterTheadList[index]
-        print "\t", "[   %2d] %18s %7s %18s %6s %18s %s" % (
-            index, "", "" if curWT.daemon == None else curWT.daemon, curWT.tid, curWT.nid,
+        print "\t", "[   %2d]  %7s %18s %6s %18s %s" % (
+            index, "N0" if curWT.daemon == None else "YES", curWT.tid, curWT.nid,
             curWT.cid, curWT.tName)
     print ""
 
