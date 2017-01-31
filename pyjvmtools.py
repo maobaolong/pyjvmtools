@@ -26,7 +26,7 @@ def getLog(pid):
     # text_file = open("/home/mbl/a.txt", "r")
     # lines = text_file.readlines()
     # text_file.close()
-    command = 'stack -l '
+    command = 'jstack -l '+ str(pid)
     r = os.popen(command)
     lines = r.readlines()
 
