@@ -9,7 +9,6 @@ class ThreadInfo:
     prio = "0"
     tid = "0x0"
     nid = "0x0"
-    cid = "0x0"
     line = ""
     lockId = "0x0"
 
@@ -41,7 +40,7 @@ def plockInfo(pid,lockid):
 
     threadInfo = None
     for line in lines:
-        searchObj = re.search(r'"(.*)"( daemon)? prio=([0-9]+) tid=(0[xX][A-Fa-f0-9]+) nid=(0[xX][A-Fa-f0-9]+) waiting on condition \[(0[xX][A-Fa-f0-9]+)\].*', line, re.M | re.I)
+        searchObj = re.search(r'"(.*)"\s?(?:#[0-9]+)?\s?(daemon)?\s?prio=([0-9]+)\s?(?:os_prio=[0-9]+)?\s?tid=(0[xX][A-Fa-f0-9]+)\s?nid=(0[xX][A-Fa-f0-9]+).*', line, re.M | re.I)
         if searchObj:
             # print "searchObj.group() : ", searchObj.group()
             threadInfo = ThreadInfo()
@@ -51,7 +50,6 @@ def plockInfo(pid,lockid):
             threadInfo.prio = searchObj.group(3)
             threadInfo.tid = searchObj.group(4)
             threadInfo.nid = searchObj.group(5)
-            threadInfo.cid = searchObj.group(6)
         else:
             searchObj = re.search(r'- parking to wait for  <(.*)> .*', line, re.M | re.I)
             if searchObj:
@@ -101,15 +99,14 @@ def plockinfobyid(k, lockCount, lockHolderMap, v):
         plockedtheadinfo(v)
 
 def plockedtheadinfo(v):
-    print "\t--------------------------------------------------------------------------------------------- "
-    print  "\t%-7s  %7s %18s %6s %18s %s" % (
-        "| index", "daemon", "Tid", "Nid", "Condtion", "ThreadName")
+    print "\t_____________________________________________________________________________________________ "
+    print  "\t%-7s    %7s   %18s   %6s   %s " % (
+        "| index", "daemon", "Tid", "Nid", "ThreadName")
     print "\t--------------------------------------------------------------------------------------------- "
     for index in range(len(v.waiterTheadList)):
         curWT = v.waiterTheadList[index]
-        print "\t", "[   %2d]  %7s %18s %6s %18s %s" % (
-            index, "N0" if curWT.daemon == None else "YES", curWT.tid, curWT.nid,
-            curWT.cid, curWT.tName)
+        print "\t", "[   %2d] | %7s | %18s | %6s | %s" % (
+            index, "N0" if curWT.daemon == None else "YES", curWT.tid, curWT.nid, curWT.tName)
     print ""
 
 
@@ -126,3 +123,4 @@ if __name__ == '__main__':
 
     verbose = args.verbose
     plockInfo(args.pid,args.lockid)
+    # plockInfo(1212,None)
