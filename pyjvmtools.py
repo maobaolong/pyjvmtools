@@ -1,48 +1,51 @@
 #!/usr/bin/python
 #coding:utf-8
+
 import os
 import re
 import argparse
-class ThreadInfo:
-    tName = ""
-    daemon = ""
-    prio = "0"
-    tid = "0x0"
-    nid = "0x0"
-    line = ""
-    lockId = "0x0"
 
+class ThreadInfo:
+    tName = None
+    daemon = None
+    prio = None
+    tid = None
+    nid = None
+    line = None
+    lockId = None
 
 class LockInfo:
-    lockid = "0x0"
+    lockid = None
     waiterTheadList = []
 
-    def LockInfo(self):
-        print self
-
 verbose = True
-def getLog(pid):
-    # text_file = open("/home/mbl/a.txt", "r")
-    # lines = text_file.readlines()
-    # text_file.close()
+def getLogFromPid(pid):
     command = 'jstack -l '+ str(pid)
     r = os.popen(command)
     lines = r.readlines()
-
     return lines
 
-def plockInfo(pid,lockid):
+def getLogFromFile(file):
+    text_file = open(file, "r")
+    lines = text_file.readlines()
+    text_file.close()
+    return lines
+
+def plockInfo(lines,lockid):
     lockMap = {}
     lockHolderMap = {}
-    lines = getLog(pid)
-
-    # print "lines = " , lines
 
     threadInfo = None
     for line in lines:
-        searchObj = re.search(r'"(.*)"\s?(?:#[0-9]+)?\s?(daemon)?\s?prio=([0-9]+)\s?(?:os_prio=[0-9]+)?\s?tid=(0[xX][A-Fa-f0-9]+)\s?nid=(0[xX][A-Fa-f0-9]+).*', line, re.M | re.I)
+        searchObj = re.search(
+            r'"(.*)"\s?'
+            r'(?:#[0-9]+)?\s?'
+            r'(daemon)?\s?'
+            r'prio=([0-9]+)\s?'
+            r'(?:os_prio=[0-9]+)?\s?'
+            r'tid=(0[xX][A-Fa-f0-9]+)\s?'
+            r'nid=(0[xX][A-Fa-f0-9]+).*', line, re.M | re.I)
         if searchObj:
-            # print "searchObj.group() : ", searchObj.group()
             threadInfo = ThreadInfo()
             threadInfo.tName = searchObj.group(1)
             threadInfo.line = line.strip()
@@ -63,10 +66,7 @@ def plockInfo(pid,lockid):
                 threadInfo.lockId = lockInfo.lockid
                 lockInfo.waiterTheadList.append(threadInfo)
             else:
-                searchObj = re.search(r'- <(0[xX][A-Fa-f0-9]+)> .*', line, re.M | re.I)
-
-                if searchObj is None:
-                     searchObj = re.search(r'- locked <(0[xX][A-Fa-f0-9]+)> .*', line, re.M | re.I)
+                searchObj = re.search(r'- (?:locked )?<(0[xX][A-Fa-f0-9]+)> .*', line, re.M | re.I)
                 if searchObj:
                     runCount = 0
                     if searchObj.group(1) in lockHolderMap:
@@ -83,8 +83,6 @@ def plockInfo(pid,lockid):
         for k, v in lockMap.iteritems():
             plockinfobyid(k, lockCount, lockHolderMap, v)
             lockCount += 1
-    # print lockMap
-
 
 def plockinfobyid(k, lockCount, lockHolderMap, v):
     runNum = 0;
@@ -109,12 +107,13 @@ def plockedtheadinfo(v):
             index, "N0" if curWT.daemon == None else "YES", curWT.tid, curWT.nid, curWT.tName)
     print ""
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="A tool to print jvm lock info.")
-
-    parser.add_argument("-pid",  type=int, required=True,
-                        help="specify a jvm process id which you want to print lock info. ")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-pid",  type=int, required=False,
+                        help="specify a jvm process id which you want to print lock info.")
+    group.add_argument("-file",  type=str, required=False,
+                        help="specify a thread dump file path which you want to print lock info.")
     parser.add_argument("-lockid",  type=str,
                         help="specify a lockid to filter information. ")
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
@@ -122,5 +121,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     verbose = args.verbose
-    plockInfo(args.pid,args.lockid)
+
+    lines = None
+    if args.pid != None:
+        lines = getLogFromPid(args.pid)
+    else:
+        lines = getLogFromFile(args.file)
+    # print "lines = " , lines
+    plockInfo(lines,args.lockid)
     # plockInfo(1212,None)
