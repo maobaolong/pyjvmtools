@@ -62,14 +62,6 @@ total log line count = 881 , total lockCount =  10
         --------------------------------------------------------------------------------------------- 
         [    0] |     YES | 0x00007fbf74b94000 | 0x7ef3 |        WAITING (parking) | file-worker-heartbeat-cancel-0
 
-mbl@mbl-ThinkPad-T450:/software/projects/AllIdeaProjects/PycharmProjects/pyjvmtools$ python pyjvmtools.py  -file "/home/mbl/a.txt" -v
-total log line count = 881 , total lockCount =  10
-<0    > 0x00000006e02d42f0 waited num     1 , run num     0. There had unlocked lock and make deadlock.
-        _____________________________________________________________________________________________ 
-        | index     daemon                  Tid      Nid                     State ThreadName 
-        --------------------------------------------------------------------------------------------- 
-        [    0] |     YES | 0x00007fbf74b94000 | 0x7ef3 |        WAITING (parking) | file-worker-heartbeat-cancel-0
-
 <1    > 0x00000006e07d6718 waited num     1 , run num     0. There had unlocked lock and make deadlock.
         _____________________________________________________________________________________________ 
         | index     daemon                  Tid      Nid                     State ThreadName 
