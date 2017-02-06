@@ -17,7 +17,7 @@ class ThreadInfo:
 
 class LockInfo:
     lockid = None
-    waiterTheadList = []
+    threadList = []
 
 verbose = True
 def getLogFromPid(pid):
@@ -45,7 +45,8 @@ def plockInfo(lines,lockid):
             r'prio=([0-9]+)\s?'
             r'(?:os_prio=[0-9]+)?\s?'
             r'tid=(0[xX][A-Fa-f0-9]+)\s?'
-            r'nid=(0[xX][A-Fa-f0-9]+).*', line, re.M | re.I)
+            r'nid=(0[xX][A-Fa-f0-9]+)'
+            r'.*', line, re.M | re.I)
         if searchObj:
             threadInfo = ThreadInfo()
             threadInfo.tName = searchObj.group(1)
@@ -59,26 +60,31 @@ def plockInfo(lines,lockid):
         if searchObj and threadInfo != None:
             threadInfo.state = searchObj.group(1)
             continue
-        searchObj = re.search(r'- parking to wait for  <(.*)> .*', line, re.M | re.I)
+        searchObj = re.search(r'- (?:(?:parking to wait for )|(?:waiting to lock ))<(.*)> .*', line, re.M | re.I)
         if searchObj:
-            lockInfo = LockInfo()
-            lockInfo.waiterTheadList = []
+            lockInfo = None
             if searchObj.group(1) in lockMap:
                 lockInfo = lockMap[searchObj.group(1)]
             else:
+                lockInfo = LockInfo()
+                lockInfo.threadList = []
                 lockMap[searchObj.group(1)] = lockInfo
             lockInfo.lockid = searchObj.group(1)
             threadInfo.lockId = lockInfo.lockid
-            lockInfo.waiterTheadList.append(threadInfo)
+            lockInfo.threadList.append(threadInfo)
             continue
         searchObj = re.search(r'- (?:locked )?<(0[xX][A-Fa-f0-9]+)> .*', line, re.M | re.I)
         if searchObj:
-            runCount = 0
+            lockInfo = None
             if searchObj.group(1) in lockHolderMap:
-                runCount = lockHolderMap[searchObj.group(1)]
-            runCount += 1
-            lockHolderMap[searchObj.group(1)] = runCount
-
+                lockInfo = lockHolderMap[searchObj.group(1)]
+            else:
+                lockInfo = LockInfo()
+                lockInfo.threadList = []
+                lockHolderMap[searchObj.group(1)] = lockInfo
+            lockInfo.lockid = searchObj.group(1)
+            threadInfo.lockId = lockInfo.lockid
+            lockInfo.threadList.append(threadInfo)
 
     print "total log line count = %d" % len(lines) ,", total lockCount = " , len(lockMap)
 
@@ -94,21 +100,23 @@ def plockinfobyid(k, lockCount, lockHolderMap, v):
     runNum = 0;
     msg = ""
     if k in lockHolderMap:
-        runNum = lockHolderMap[k]
+        runNum = len(lockHolderMap[k].threadList)
     if runNum == 0:
         msg = "There had unlocked lock and make deadlock."
-    print  "<%-5d> %18s waited num %5d , run num %5d. %s" % (
-        lockCount, k, len(v.waiterTheadList), runNum, msg)
+    elif runNum == 1:
+        msg = "lock holder is '%s'" % lockHolderMap[k].threadList[0].tName
+    print  "lock <%-5d> %18s waited num %d , run num %d. %s" % (
+        lockCount, k, len(v.threadList), runNum, msg)
     if verbose:
-        plockedtheadinfo(v)
+        plockedthreadinfo(v)
 
-def plockedtheadinfo(v):
+def plockedthreadinfo(v):
     print "\t_____________________________________________________________________________________________ "
     print  "\t|%-7s|  %7s|  %18s|  %6s|  %24s| %s " % (
         "  index", "daemon", "Tid", "Nid", "State", "ThreadName")
     print "\t--------------------------------------------------------------------------------------------- "
-    for index in range(len(v.waiterTheadList)):
-        curWT = v.waiterTheadList[index]
+    for index in range(len(v.threadList)):
+        curWT = v.threadList[index]
         print "\t", "[   %2d] | %7s | %18s | %6s | %24s | %s" % (
             index, "N0" if curWT.daemon == None else "YES", curWT.tid, curWT.nid, curWT.state, curWT.tName)
     print ""
