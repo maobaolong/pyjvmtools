@@ -104,8 +104,8 @@ def plockinfobyid(k, lockCount, lockHolderMap, v):
 
 def plockedtheadinfo(v):
     print "\t_____________________________________________________________________________________________ "
-    print  "\t%-7s    %7s   %18s   %6s  %24s %s " % (
-        "| index", "daemon", "Tid", "Nid", "State", "ThreadName")
+    print  "\t|%-7s|  %7s|  %18s|  %6s|  %24s| %s " % (
+        "  index", "daemon", "Tid", "Nid", "State", "ThreadName")
     print "\t--------------------------------------------------------------------------------------------- "
     for index in range(len(v.waiterTheadList)):
         curWT = v.waiterTheadList[index]
