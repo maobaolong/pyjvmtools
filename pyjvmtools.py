@@ -60,7 +60,7 @@ def plockInfo(lines,lockid):
         if searchObj and threadInfo != None:
             threadInfo.state = searchObj.group(1)
             continue
-        searchObj = re.search(r'- (?:(?:parking to wait for )|(?:waiting to lock ))<(.*)> .*', line, re.M | re.I)
+        searchObj = re.search(r'- (?:(?:parking to wait for)|(?:waiting to lock))\s*<(.*)> .*', line, re.M | re.I)
         if searchObj:
             lockInfo = None
             if searchObj.group(1) in lockMap:
@@ -143,4 +143,5 @@ if __name__ == '__main__':
         lines = getLogFromFile(args.file)
     # print "lines = " , lines
     plockInfo(lines,args.lockid)
-    # plockInfo(1212,None)
+    # # plockInfo(1212,None)
+
